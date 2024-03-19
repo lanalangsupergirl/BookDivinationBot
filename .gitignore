@@ -1,0 +1,8 @@
+# dependencies
+.env
+/node_modules
+/.pnp
+.pnp.js
+
+/dist
+google_key.json
