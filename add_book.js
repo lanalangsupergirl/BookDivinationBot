@@ -1,10 +1,10 @@
 import * as fs from 'fs';
 import process from 'process';
 import { exit } from 'node:process';
-import { db, errorHandler } from './utils.js';
+import { db } from './utils.js';
 
 db.serialize();
-//проверка на наличие аргументов, если нет - exit
+
 if (process.argv[2] === undefined || process.argv[3] === undefined) {
   exit(1);
 }
@@ -31,7 +31,6 @@ while (true) {
     page = '';
   }
 
-  // let index = book.indexOf(".");
   let regex = /[(?!.)<]/g;
   let index = book.search(regex);
 
@@ -45,7 +44,6 @@ while (true) {
   book = book.substring(index + 1);
 }
 
-
 if (page !== '') {
   pages.push(page.trimStart());
 }
@@ -53,7 +51,7 @@ if (page !== '') {
 new Promise((resolve, reject) => {
   db.run('INSERT INTO books_list(name) VALUES (?)', [name], (err) => {
     if (err) {
-      process.stderr.write(err);
+      reject(err);
       return;
     }
   });
@@ -66,21 +64,24 @@ new Promise((resolve, reject) => {
 
     resolve(result);
   });
-}).then((value) => {
-  pages.forEach((i, index) => {
-    db.run(
-      'INSERT INTO pages(book_id, page_number, page) VALUES (?, ?, ?)',
-      [value.book_id, index + 1, i],
-      (err) => {
-        if (err) {
-          rej(err);
-          return;
-        }
-      },
-    );
+})
+  .then((value) => {
+    pages.forEach((i, index) => {
+      db.run(
+        'INSERT INTO pages(book_id, page_number, page) VALUES (?, ?, ?)',
+        [value.book_id, index + 1, i],
+        (err) => {
+          if (err) {
+            process.stderr.write(err);
+            return;
+          }
+        },
+      );
+    });
+  })
+  .catch((err) => {
+    reject(err);
   });
-});
-
 
 // node add_book.js Сто_лет_одиночества Markes_sto_let.txt
 // node add_book.js Преступление_и_наказание Dostoevskiy.txt

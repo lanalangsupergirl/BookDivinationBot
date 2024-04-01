@@ -68,9 +68,7 @@ bot.action('begin', async (ctx) => {
 });
 
 bot.action('randomwisdom', async (ctx) => {
-  let string = randomWisdom();
-
-  await ctx.reply(`${string}`);
+  await ctx.reply(randomWisdom());
 });
 
 bot.on('message', async (ctx) => {
@@ -79,8 +77,8 @@ bot.on('message', async (ctx) => {
   }
 
   if (ctx.message.text === '/randomwisdom') {
-    let string = randomWisdom();
-    await ctx.reply(`${string}`);
+
+    await ctx.reply(randomWisdom());
 
   } else if (ctx.message.text === '/bychance') {
 

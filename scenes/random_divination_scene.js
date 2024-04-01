@@ -1,6 +1,6 @@
 import { Scenes, Markup } from 'telegraf';
-import { generateRandom } from '../utils.js';
 import { getBookName } from '../actions/get_book_name.js';
+import { getRandomBookId } from '../actions/get_random_book_id.js';
 import { getRandomDivination } from '../actions/get_random_divination.js';
 import { addBotStatistics } from '../add_bot_statistics.js';
 
@@ -10,7 +10,7 @@ export const randomDivinationScene = new Scenes.WizardScene(
     ctx.scene.session.user = {};
     ctx.scene.session.user.id = ctx.chat.id;
 
-    await addBotStatistics(ctx.chat.id);
+    addBotStatistics(ctx.chat.id);
 
     ctx.reply('Напиши свой вопрос и получи быстрое случайное гадание');
 
@@ -19,11 +19,13 @@ export const randomDivinationScene = new Scenes.WizardScene(
   async (ctx) => {
     ctx.wizard.state.question = ctx.update.message.text;
 
-    ctx.wizard.state.randomBookId = generateRandom(1, 10);
-    // console.log('bot_randnum', ctx.wizard.state.randomBookId);
+    if (ctx.wizard.state.question === undefined) {
+      ctx.wizard.state.question = 'Ты не задал вопрос';
+    }
+
+    ctx.wizard.state.randomBookId = await getRandomBookId();
 
     ctx.wizard.state.bookName = await getBookName(ctx.wizard.state.randomBookId);
-    // console.log('bookname', ctx.wizard.state.bookName);
 
     let randomDivination = await getRandomDivination(ctx.wizard.state.randomBookId);
 
@@ -54,8 +56,11 @@ export const randomDivinationScene = new Scenes.WizardScene(
       ctx.reply(
         '✨Книги прощаются с тобой и ждут твоего возвращения с новым вопросом для них✨',
         Markup.inlineKeyboard([
-          Markup.button.callback('Погадать еще раз', 'start'),
-          Markup.button.callback('Слова поддержки', 'randomwisdom'),
+          [
+            Markup.button.callback('Погадать еще раз', 'start'),
+            Markup.button.callback('Погадать быстро', 'bychance'),
+          ],
+          [Markup.button.callback('Слова поддержки', 'randomwisdom')],
         ]),
       );
     }

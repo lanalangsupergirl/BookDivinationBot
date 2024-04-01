@@ -1,10 +1,10 @@
 import sqlite3 from 'sqlite3';
+import process from 'process';
 
 export function openDb(dbname, path) {
   return new dbname.Database(path, dbname.OPEN_READWRITE, (err) => {
     if (err) {
-      process.stderr.write(err);
-      return;
+      process.exit(1);
     }
   });
 }
@@ -19,16 +19,11 @@ export function errorHandler(err) {
 }
 
 export function randomWisdom() {
-   let randomPhrase = Math.floor(Math.random() * phrases.length);
-
-   let string = '';
-   for (let i = 0; i < phrases.length; i++) {
-     string = phrases[randomPhrase];
-   }
-   return string;
+  let randomPhrase = Math.floor(Math.random() * phrases.length);
+  return phrases[randomPhrase];
 }
 
-export const phrases = [
+const phrases = [
   'Твои мечты обязательно сбудутся, даже если сейчас тебе так не кажется',
   'Ты самый главный человек для себя, и ты каждый день делаешь маленькие шаги.',
   'Ты можешь быть неидеальной(ым).',
@@ -62,7 +57,5 @@ export const phrases = [
 ];
 
 export function generateRandom(min, max) {
-   return Math.floor(Math.random() * (max - min + 1)) + min;
- }
-
-
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}

@@ -4,14 +4,12 @@ import { generateRandom } from '../utils.js';
 
 export async function getRandomDivination(id) {
   let maxPage = await getMaxPage(id);
-  // console.log(maxPage);
 
-  let randomPage = await generateRandom(1, maxPage[0].max);
-  // console.log(randomPage);
+  let randomPage = generateRandom(1, maxPage);
 
   let pageText = await getPageText(id, randomPage);
 
-  let text = pageText[0].page.split(/(?<=[?!.])/g).filter((phrase) => phrase !== '.');
+  let text = pageText.split(/(?<=[?!.])/g).filter((phrase) => phrase !== '.');
 
   let randomPhraseNumber = Math.floor(Math.random() * text.length);
 

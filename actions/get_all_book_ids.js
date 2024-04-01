@@ -1,16 +1,16 @@
 import { db } from '../utils.js';
 
-export async function getMaxPage(id) {
+export async function getAllBookIds() {
   return new Promise((resolve, reject) => {
-    db.get('SELECT MAX(page_number) AS max  FROM pages WHERE book_id = ?', [id], (err, row) => {
+    db.all('SELECT id FROM books_list', [], (err, rows) => {
       if (err) {
         reject(err);
       }
-      resolve(row);
+      resolve(rows);
     });
   })
     .then((value) => {
-      return value.max;
+      return value.map((el) => el.id);
     })
     .catch((err) => {
       if (err) {

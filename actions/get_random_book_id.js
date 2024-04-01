@@ -1,16 +1,18 @@
 import { db } from '../utils.js';
 
-export async function getMaxPage(id) {
+export async function getRandomBookId() {
   return new Promise((resolve, reject) => {
-    db.get('SELECT MAX(page_number) AS max  FROM pages WHERE book_id = ?', [id], (err, row) => {
+    db.all('SELECT id FROM books_list', [], (err, rows) => {
       if (err) {
         reject(err);
       }
-      resolve(row);
+      resolve(rows);
     });
   })
     .then((value) => {
-      return value.max;
+      let bookIds = value.map((el) => el.id);
+      let randomId = Math.floor(Math.random() * bookIds.length);
+      return bookIds[randomId];
     })
     .catch((err) => {
       if (err) {

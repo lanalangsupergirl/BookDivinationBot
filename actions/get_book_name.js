@@ -1,14 +1,22 @@
-import { db, errorHandler } from '../utils.js';
+import { db } from '../utils.js';
 
 export async function getBookName(id) {
-  let bookName = new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     db.get('SELECT name FROM books_list WHERE id = ?', [id], (err, row) => {
       if (err) {
-        reject(errorHandler);
+        reject(err);
+        return;
       }
-      resolve(row.name);
-    });
-  });
 
-  return bookName;
+      resolve(row);
+    });
+  }).then((value) => {
+    return value.name
+  })
+  .catch((err) => {
+    if (err) {
+      console.log(err);
+      return;
+    }
+  });
 }

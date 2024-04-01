@@ -3,6 +3,7 @@ import { getBookName } from '../actions/get_book_name.js';
 import { getMaxPage } from '../actions/get_max_page.js';
 import { getPageText } from '../actions/get_page_text.js';
 import { getDivination } from '../actions/get_divination.js';
+import { getAllBookIds } from '../actions/get_all_book_ids.js';
 import { addBotStatistics } from '../add_bot_statistics.js';
 
 export const divinationScene = new Scenes.WizardScene(
@@ -12,14 +13,13 @@ export const divinationScene = new Scenes.WizardScene(
 
     ctx.scene.session.user.id = ctx.chat.id;
 
-    await addBotStatistics(ctx.chat.id);
+    addBotStatistics(ctx.chat.id);
 
     ctx.reply('Напиши свой вопрос! Он нигде не сохраняется и виден только тебе');
 
     return ctx.wizard.next();
   },
   (ctx) => {
-    // console.log(ctx.scene.session.user);
 
     if (ctx.update.message.text === undefined) {
       ctx.wizard.state.question = 'Вы не задали вопрос';
@@ -48,25 +48,28 @@ export const divinationScene = new Scenes.WizardScene(
     return ctx.wizard.next();
   },
   async (ctx) => {
-    ctx.wizard.state.book = parseInt(Math.trunc(ctx.message.text));
+    ctx.wizard.state.bookId = parseInt(Math.trunc(ctx.message.text));
+    console.log(ctx.wizard.state.bookId);
 
-    if (isNaN(ctx.wizard.state.book)) {
+    let allBookIds = await getAllBookIds();
+
+    if (isNaN(ctx.wizard.state.bookId)) {
       ctx.reply('Это не число. Попробуй еще раз!');
       return;
     }
 
-    ctx.wizard.state.bookName = await getBookName(ctx.wizard.state.book);
-    // console.log(ctx.wizard.state.bookName);
-
-    if (ctx.wizard.state.book > 10 || ctx.wizard.state.book <= 0) {
+    if (!allBookIds.includes(ctx.wizard.state.bookId)) {
       ctx.reply('Книги с таким номером не существует. Попробуй еще раз!');
       return;
     }
 
-    let maxPage = await getMaxPage(ctx.wizard.state.book);
-    ctx.wizard.state.maxpage = maxPage[0].max;
+    ctx.wizard.state.bookName = await getBookName(ctx.wizard.state.bookId);
 
-    ctx.reply(`Выбери страницу от 1 до ${maxPage[0].max}. В сообщении напиши только число`);
+    ctx.wizard.state.maxpage = await getMaxPage(ctx.wizard.state.bookId);
+
+    ctx.reply(
+      `Выбери страницу от 1 до ${ctx.wizard.state.maxpage}. В сообщении напиши только число`,
+    );
 
     return ctx.wizard.next();
   },
@@ -88,9 +91,7 @@ export const divinationScene = new Scenes.WizardScene(
       return;
     }
 
-    let page = await getPageText(ctx.wizard.state.book, ctx.wizard.state.page);
-
-    ctx.wizard.state.text = page;
+    ctx.wizard.state.text = await getPageText(ctx.wizard.state.bookId, ctx.wizard.state.page);
 
     ctx.replyWithMarkdownV2(
       'Выбери строку от 1 до 60 сверху либо снизу\\.\\ Пример твоего сообщения: *10 сверху*, либо *5 снизу*\\. Если ты не хочешь указывать направление строки, то по уомлчанию это всегда строка *сверху*\\.',
@@ -99,8 +100,6 @@ export const divinationScene = new Scenes.WizardScene(
     return ctx.wizard.next();
   },
   async (ctx) => {
-    ctx.wizard.state.line = ctx.message.text;
-
     if (ctx.message.text === undefined) {
       ctx.reply('Что-то пошло не так');
       return;
@@ -115,7 +114,7 @@ export const divinationScene = new Scenes.WizardScene(
 
     let searchFrom = parseInt(Math.trunc(ctx.message.text.match(/-?\d+/)));
     let position = ctx.message.text.split(' ').slice(-1)[0];
-    let text = ctx.wizard.state.text[0].page;
+    let text = ctx.wizard.state.text;
 
     if (isNaN(searchFrom)) {
       ctx.reply('Нет номера строки - нет предсказания');
@@ -166,8 +165,11 @@ export const divinationScene = new Scenes.WizardScene(
       ctx.reply(
         '✨Книги прощаются с тобой и ждут твоего возвращения с новым вопросом для них✨',
         Markup.inlineKeyboard([
-          Markup.button.callback('Погадать еще раз', 'start'),
-          Markup.button.callback('Слова поддержки', 'randomwisdom'),
+          [
+            Markup.button.callback('Погадать еще раз', 'start'),
+            Markup.button.callback('Погадать быстро', 'bychance'),
+          ],
+          [Markup.button.callback('Слова поддержки', 'randomwisdom')],
         ]),
       );
     }
