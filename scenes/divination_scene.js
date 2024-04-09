@@ -3,7 +3,7 @@ import { getBookName } from '../actions/get_book_name.js';
 import { getMaxPage } from '../actions/get_max_page.js';
 import { getPageText } from '../actions/get_page_text.js';
 import { getDivination } from '../actions/get_divination.js';
-import { getAllBookIds } from '../actions/get_all_book_ids.js';
+import { checkBookIdExists } from '../actions/get_all_book_ids.js';
 import { addBotStatistics } from '../add_bot_statistics.js';
 
 export const divinationScene = new Scenes.WizardScene(
@@ -20,7 +20,6 @@ export const divinationScene = new Scenes.WizardScene(
     return ctx.wizard.next();
   },
   (ctx) => {
-
     if (ctx.update.message.text === undefined) {
       ctx.wizard.state.question = 'Вы не задали вопрос';
     }
@@ -51,14 +50,14 @@ export const divinationScene = new Scenes.WizardScene(
     ctx.wizard.state.bookId = parseInt(Math.trunc(ctx.message.text));
     console.log(ctx.wizard.state.bookId);
 
-    let allBookIds = await getAllBookIds();
-
     if (isNaN(ctx.wizard.state.bookId)) {
       ctx.reply('Это не число. Попробуй еще раз!');
       return;
     }
 
-    if (!allBookIds.includes(ctx.wizard.state.bookId)) {
+    let isBookIdExists = await checkBookIdExists(ctx.wizard.state.bookId);
+
+    if (isBookIdExists === false) {
       ctx.reply('Книги с таким номером не существует. Попробуй еще раз!');
       return;
     }

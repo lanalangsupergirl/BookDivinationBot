@@ -1,6 +1,6 @@
 import { db } from '../utils.js';
 
-export async function getAllBookIds() {
+export async function checkBookIdExists(id) {
   return new Promise((resolve, reject) => {
     db.all('SELECT id FROM books_list', [], (err, rows) => {
       if (err) {
@@ -10,7 +10,15 @@ export async function getAllBookIds() {
     });
   })
     .then((value) => {
-      return value.map((el) => el.id);
+      let ids = value.map((el) => el.id);
+
+      console.log(ids.indexOf(id));
+
+      if (ids.indexOf(id) === -1) {
+        return false;
+      } else {
+        return true;
+      }
     })
     .catch((err) => {
       if (err) {

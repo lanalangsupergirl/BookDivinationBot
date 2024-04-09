@@ -8,6 +8,7 @@ export async function getPageText(id, page_num) {
       (err, row) => {
         if (err) {
           reject(err);
+          return;
         }
 
         resolve(row);
