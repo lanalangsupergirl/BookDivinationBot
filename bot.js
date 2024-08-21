@@ -1,7 +1,5 @@
 import { Telegraf, Scenes, session, Markup } from 'telegraf';
 import 'dotenv/config';
-// import axios from 'axios';
-// import express from 'express';
 import { randomWisdom } from './utils.js';
 import { divinationScene } from './scenes/divination_scene.js';
 import { randomDivinationScene } from './scenes/random_divination_scene.js';
@@ -12,24 +10,29 @@ if (BOT_TOKEN === undefined) {
   throw new Error('BOT_TOKEN must be provided!');
 }
 
-// const PORT = process.env.PORT || 88;
-// const app = express();
-
-// app.use(express.json());
-// app.use(
-//   express.urlencoded({
-//     extended: true,
-//   }),
-// );
-
 const bot = new Telegraf(BOT_TOKEN);
 
 bot.catch((err, ctx) => {
-  console.log('err', err);
+  console.log('error', err);
+
+  if (err.code === 403) {
+    if (err.description === 'Forbidden: bot was blocked by the user') {
+      console.log(`Bot was blocked by user ${ctx.update.message.from.id}`);
+    }
+    if (err.description === 'Forbidden: user is deactivated') {
+      console.log(`User ${ctx.update.message.from.id} is deactivated`);
+    }
+  }
+
   ctx.scene.leave();
   return ctx.reply(
     'Что-то пошло не так! Попробуй еще раз, все возможные варианты находятся в меню',
   );
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Необработанное исключение:', err);
+  process.exit(1);
 });
 
 const stage = new Scenes.Stage([divinationScene, randomDivinationScene], {
@@ -77,15 +80,10 @@ bot.on('message', async (ctx) => {
   }
 
   if (ctx.message.text === '/randomwisdom') {
-
     await ctx.reply(randomWisdom());
-
   } else if (ctx.message.text === '/bychance') {
-
     await ctx.scene.enter('bychance');
-
   } else {
-
     ctx.reply(
       'Хотите погадать?',
       Markup.inlineKeyboard([
@@ -100,7 +98,3 @@ bot.launch();
 
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
-
-// app.listen(PORT, () => {
-//   console.log(`Example app listening on port ${PORT}`);
-// });
