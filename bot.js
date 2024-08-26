@@ -18,9 +18,11 @@ bot.catch((err, ctx) => {
   if (err.code === 403) {
     if (err.description === 'Forbidden: bot was blocked by the user') {
       console.log(`Bot was blocked by user ${ctx.update.message.from.id}`);
+      return;
     }
     if (err.description === 'Forbidden: user is deactivated') {
       console.log(`User ${ctx.update.message.from.id} is deactivated`);
+      return;
     }
   }
 
